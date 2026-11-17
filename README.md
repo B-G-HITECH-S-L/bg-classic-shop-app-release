@@ -180,3 +180,7 @@ python3 -B -m unittest discover -s tests -v
 [Release 附件及文件名规则](https://docs.github.com/en/rest/releases/assets)、
 [Latest 附件链接规则](https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases)、
 [目录提交与 blob SHA](https://docs.github.com/en/rest/repos/contents#create-or-update-file-contents)。
+
+### 新版 SDK 证书输出兼容
+
+支持 apksigner 的 `Signer #1` 与 `Signer (minSdkVersion=…, maxSdkVersion=…)` 证书输出。同一证书可按多个 SDK 区间重复出现；多个编号签名者、不同证书、未知应用签名摘要格式或异常签名者计数均拒绝，仍必须匹配固定的正式证书指纹。解析兼容不会放行签名轮换，也不会把 Source Stamp 当作应用签名证书。

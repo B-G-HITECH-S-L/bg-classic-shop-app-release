@@ -63,7 +63,10 @@ class RealApkSignatureTests(unittest.TestCase):
 
     def test_pinned_fixture_passes(self):
         result=self.verify('release')
-        self.assertEqual(result.returncode,0,result.stderr)
+        details = result.stderr
+        if result.returncode:
+            details += self.run_tool(str(self.tools/'apksigner'),'verify','--verbose','--print-certs',str(self.root/'release.apk')).stdout
+        self.assertEqual(result.returncode,0,details)
         self.assertEqual(json.loads(result.stdout)['versionCode'],7)
         self.assertEqual(json.loads(result.stdout)['signingCertificateSha256'],self.pin)
 

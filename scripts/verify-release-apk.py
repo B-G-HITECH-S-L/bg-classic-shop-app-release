@@ -16,6 +16,26 @@ APPLICATION_ID = 'com.byghitech.classicpos'
 ABIS = ('armeabi-v7a', 'arm64-v8a')
 
 
+def signing_fingerprint(output):
+    # AOSP prints either numbered signers or v3.1 SDK-range signers. One
+    # certificate may be repeated for multiple ranges, but rotation/multi-signing
+    # must not silently widen our single-certificate release policy.
+    label = r'Signer (?:#([1-9][0-9]*)|\(minSdkVersion=[0-9]+(?: \(dev release=true\))?, maxSdkVersion=[0-9]+\))'
+    lines = [line for line in output.splitlines()
+             if line.startswith('Signer ') and ' certificate SHA-256 digest:' in line]
+    parsed = [re.fullmatch(label + r' certificate SHA-256 digest: ([0-9a-fA-F]{64})', line)
+              for line in lines]
+    counts = [line for line in output.splitlines() if line.startswith('Number of signers:')]
+    if (not parsed or any(match is None for match in parsed)
+            or any(line != 'Number of signers: 1' for line in counts)):
+        raise ValueError('未能确认唯一正式签名证书。')
+    fingerprints = {match.group(2).lower() for match in parsed}
+    numbered = {match.group(1) for match in parsed if match.group(1) is not None}
+    if len(fingerprints) != 1 or len(numbered) > 1:
+        raise ValueError('未能确认唯一正式签名证书。')
+    return fingerprints.pop()
+
+
 def android_tool(name):
     override = os.environ.get(name.upper() + '_BIN')
     if override:
@@ -70,11 +90,7 @@ def inspect(apk, version, code=None):
                            capture_output=True, text=True, check=True).stdout
     if re.search(r'\bCN\s*=\s*Android Debug\b', certs, re.IGNORECASE):
         raise ValueError('不能使用 Android Debug 签名。')
-    fingerprints = re.findall(r'^Signer #\d+ certificate SHA-256 digest: ([0-9a-fA-F]{64})$',
-                              certs, re.MULTILINE)
-    if len(fingerprints) != 1:
-        raise ValueError('未能确认唯一正式签名证书。')
-    fingerprint = fingerprints[0].lower()
+    fingerprint = signing_fingerprint(certs)
     expected = expected_certificate(Path(__file__).resolve().parents[1])
     if expected != fingerprint:
         raise ValueError('签名不符合固定的正式证书指纹。')
