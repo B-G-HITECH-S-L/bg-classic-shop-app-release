@@ -25,6 +25,19 @@ class SignerOutputTests(unittest.TestCase):
         output='Number of signers: 1\n'+line('Signer (minSdkVersion=24, maxSdkVersion=32)')+'\n'+line('Signer (minSdkVersion=33, maxSdkVersion=2147483647)')
         self.assertEqual(verifier.signing_fingerprint(output),PIN)
 
+    def test_scheme_prefixed_signer_formats(self):
+        for version in ['V1','V2','V3.0','V3.1','V3.2','V4']:
+            with self.subTest(version=version):
+                self.assertEqual(verifier.signing_fingerprint('Number of signers: 1\n'+line(version+' Signer:')),PIN)
+
+    def test_scheme_prefix_does_not_allow_rotation_or_unknown_formats(self):
+        for output in [line('V3.0 Signer:')+'\n'+line('V3.1 Signer:','b'*64),
+                       line()+'\n'+line('Unknown Signer:'),
+                       line()+'\n'+line('V5 Signer:'),
+                       line('V2 Signer #1:')+'\n'+line('V2 Signer #2:')]:
+            with self.subTest(output=output), self.assertRaises(ValueError):
+                verifier.signing_fingerprint(output)
+
     def test_dev_release_range(self):
         self.assertEqual(verifier.signing_fingerprint(line('Signer (minSdkVersion=33 (dev release=true), maxSdkVersion=2147483647)')),PIN)
 
