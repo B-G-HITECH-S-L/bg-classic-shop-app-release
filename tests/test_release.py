@@ -28,7 +28,7 @@ class ReleaseTests(unittest.TestCase):
         shutil.copy2(ROOT / "scripts/release.sh", self.script)
         shutil.copy2(ROOT / "scripts/generate-update-manifest.py", self.root / "scripts/generate-update-manifest.py")
         shutil.copy2(ROOT / "scripts/sync-aio-catalog.py", self.root / "scripts/sync-aio-catalog.py")
-        for helper in ['verify-release-apk.py', 'release_signing.py']:
+        for helper in ['verify-release-apk.py', 'release_signing.py', 'validate-public-notes.py']:
             shutil.copy2(ROOT / 'scripts' / helper, self.root / 'scripts' / helper)
         (self.root / 'config').mkdir()
         (self.root / 'config/release-cert.sha256').write_text('a' * 64 + '\n')
@@ -133,6 +133,21 @@ class ReleaseTests(unittest.TestCase):
             asset['browser_download_url'] = f"https://github.com/{REPO}/releases/download/{tag}/{asset['name']}"
         return dict(id=release_id,tag_name=tag,draft=False,prerelease=False,
             html_url=f"https://github.com/{REPO}/releases/tag/{tag}",target_commitish="main",assets=assets)
+
+    def test_private_notes_stop_every_mode_before_remote_or_local_writes(self):
+        notes = self.version_dir / "release-notes.md"
+        manifest = self.version_dir / "update.json"
+        for flags in [(), ("--dry-run",), ("--draft",), ("--resume",), ("--resume", "--draft")]:
+            with self.subTest(flags=flags):
+                notes.write_text("# Product changes\n地址203.0.113.10请勿公开\n", encoding="utf-8")
+                manifest.write_text('{"sentinel": true}\n', encoding="utf-8")
+                original_notes, original_manifest = notes.read_bytes(), manifest.read_bytes()
+                result = self.run_release(*flags)
+                self.assert_failure(result, "公开发布说明")
+                self.assertNotIn("203.0.113.10", result.stdout + result.stderr)
+                self.assertEqual(notes.read_bytes(), original_notes)
+                self.assertEqual(manifest.read_bytes(), original_manifest)
+                self.assertEqual(self.mutations(), [])
 
     def test_stale_or_missing_catalog_never_allows_a_latest_code_rollback(self):
         for code in (7, 9):
