@@ -186,7 +186,7 @@ else
 fi
 {
   printf '%s\n' '<!-- release-package-info:start -->' '## 安装包信息' ''
-  printf '%s\n' "- 文件名: $APK_NAME" "- SHA-256: $APK_SHA" "- Size: $APK_SIZE"
+  printf '%s\n' "- 文件名: $APK_NAME" "- SHA-256: $APK_SHA" "- 大小（字节）: $APK_SIZE"
   printf '%s\n' '<!-- release-package-info:end -->'
 } > "$WORK_DIR/package-info.md"
 
@@ -382,7 +382,7 @@ if [[ "$KEEP_DRAFT" == false ]]; then
     die 'AIO 目录预检失败，未开始本次远程发布操作。'
 fi
 
-printf '仓库：%s\n版本：%s\nAPK：%s\nSize: %s bytes\nSHA-256：%s\n' \
+printf '仓库：%s\n版本：%s\nAPK：%s\n大小：%s 字节\nSHA-256：%s\n' \
   "$REPO" "$VERSION" "$APK_NAME" "$APK_SIZE" "$APK_SHA"
 if [[ -n "$RELEASE_ID" ]]; then
   printf '计划：续传草稿（目标：%s），核对并使用本地发布说明。\n' "$RELEASE_TARGET"

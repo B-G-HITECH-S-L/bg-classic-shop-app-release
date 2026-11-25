@@ -18,11 +18,11 @@ class PublicNotesTests(unittest.TestCase):
     def test_user_changes_and_package_info_are_allowed(self):
         text = """# BiG Retail v1.0.14（1028）
 - 切换授权服务器会退出登录，需要重新激活。
-- Supports Android 7.0+, ARM32 / ARM64; app com.byghitech.classicpos.
-- Archivo: big-retail.apk; update.json. Se requiere reactivar.
+- 支持 Android 7.0+、ARM32 / ARM64；应用包名 com.byghitech.classicpos.
+- 文件：big-retail.apk、update.json；需要重新激活。
 <!-- release-package-info:start -->
 - SHA-256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-- Size: 84418939
+- 大小（字节）: 84418939
 <!-- release-package-info:end -->
 """
         self.assertEqual(self.find(text), [])

@@ -107,7 +107,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(content.count("<!-- release-package-info:end -->"), 1)
         self.assertIn("- 文件名: " + self.apk.name, content)
         self.assertIn("- SHA-256: " + hashlib.sha256(data).hexdigest(), content)
-        self.assertIn("- Size: " + str(len(data)) + "\n", content)
+        self.assertIn("- 大小（字节）: " + str(len(data)) + "\n", content)
 
     def draft(self, assets=None):
         self.state["releases"] = [{"id": 1, "tag_name": "v0.0.1", "draft": True, "prerelease": False,
